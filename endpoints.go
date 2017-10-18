@@ -9,6 +9,7 @@ import (
 	"github.com/go-kit/kit/tracing/opentracing"
 	stdopentracing "github.com/opentracing/opentracing-go"
 	"golang.org/x/net/context"
+	xtr "github.com/JonathanMace/tracing-framework-go/xtrace/client"
 )
 
 // Endpoints collects the endpoints that comprise the Service.
@@ -35,6 +36,8 @@ func MakeEndpoints(s Service, tracer stdopentracing.Tracer) Endpoints {
 // MakeListEndpoint returns an endpoint via the given service.
 func MakeListEndpoint(s Service) endpoint.Endpoint {
 	return func(ctx context.Context, request interface{}) (response interface{}, err error) {
+		xtr.Log("List")
+		defer xtr.Log("List Done")
 		req := request.(listRequest)
 		socks, err := s.List(req.Tags, req.Order, req.PageNum, req.PageSize)
 		return listResponse{Socks: socks, Err: err}, err
@@ -44,6 +47,8 @@ func MakeListEndpoint(s Service) endpoint.Endpoint {
 // MakeCountEndpoint returns an endpoint via the given service.
 func MakeCountEndpoint(s Service) endpoint.Endpoint {
 	return func(ctx context.Context, request interface{}) (response interface{}, err error) {
+		xtr.Log("Count")
+		defer xtr.Log("Count Done")
 		req := request.(countRequest)
 		n, err := s.Count(req.Tags)
 		return countResponse{N: n, Err: err}, err
@@ -53,6 +58,8 @@ func MakeCountEndpoint(s Service) endpoint.Endpoint {
 // MakeGetEndpoint returns an endpoint via the given service.
 func MakeGetEndpoint(s Service) endpoint.Endpoint {
 	return func(ctx context.Context, request interface{}) (response interface{}, err error) {
+		xtr.Log("Get")
+		defer xtr.Log("Get Done")
 		req := request.(getRequest)
 		sock, err := s.Get(req.ID)
 		return getResponse{Sock: sock, Err: err}, err
@@ -62,6 +69,8 @@ func MakeGetEndpoint(s Service) endpoint.Endpoint {
 // MakeTagsEndpoint returns an endpoint via the given service.
 func MakeTagsEndpoint(s Service) endpoint.Endpoint {
 	return func(ctx context.Context, request interface{}) (response interface{}, err error) {
+		xtr.Log("Tags")
+		defer xtr.Log("Tags Done")
 		tags, err := s.Tags()
 		return tagsResponse{Tags: tags, Err: err}, err
 	}
@@ -70,6 +79,8 @@ func MakeTagsEndpoint(s Service) endpoint.Endpoint {
 // MakeHealthEndpoint returns current health of the given service.
 func MakeHealthEndpoint(s Service) endpoint.Endpoint {
 	return func(ctx context.Context, request interface{}) (response interface{}, err error) {
+		xtr.Log("Health")
+		defer xtr.Log("Health Done")
 		health := s.Health()
 		return healthResponse{Health: health}, nil
 	}

@@ -17,10 +17,13 @@ import (
 
 	_ "github.com/go-sql-driver/mysql"
 	"github.com/jmoiron/sqlx"
-	"github.com/microservices-demo/catalogue"
+	"github.com/JonathanMace/catalogue"
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/weaveworks/common/middleware"
 	"golang.org/x/net/context"
+
+	xtr "github.com/JonathanMace/tracing-framework-go/xtrace/client"
+	bot "github.com/JonathanMace/tracing-framework-go/opentracing"
 )
 
 const (
@@ -36,6 +39,10 @@ var (
 )
 
 func init() {
+	fmt.Println("Connecting to xtrace-server:5563")
+	xtr.Connect("xtrace-server:5563")
+	xtr.SetProcessName("Catalogue Microservice")
+
 	prometheus.MustRegister(HTTPLatency)
 }
 
@@ -63,7 +70,7 @@ func main() {
 	// Log domain.
 	var logger log.Logger
 	{
-		logger = log.NewLogfmtLogger(os.Stderr)
+		logger = log.NewLogfmtLogger(xtr.MakeWriter(os.Stderr))
 		logger = log.NewContext(logger).With("ts", log.DefaultTimestampUTC)
 		logger = log.NewContext(logger).With("caller", log.DefaultCaller)
 	}
@@ -86,6 +93,7 @@ func main() {
 			tracer, err = zipkin.NewTracer(
 				zipkin.NewRecorder(collector, false, fmt.Sprintf("localhost:%v", port), ServiceName),
 			)
+			tracer = bot.Wrap(tracer.(zipkin.Tracer))
 			if err != nil {
 				logger.Log("err", err)
 				os.Exit(1)
